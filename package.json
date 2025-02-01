@@ -1,0 +1,20 @@
+{
+  "name": "task-prioritization-api",
+  "version": "1.0.0",
+  "type": "module",
+  "description": "Task prioritization backend built in JS.",
+  "main": "app.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "dev": "npx nodemon app.js"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "dotenv": "^16.4.7",
+    "express": "^4.21.2"
+  },
+  "devDependencies": {
+    "nodemon": "^3.1.9"
+  }
+}
