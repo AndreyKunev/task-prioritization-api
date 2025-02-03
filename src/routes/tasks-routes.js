@@ -1,6 +1,6 @@
 import express from 'express';
 
-import { createTask, getTaskById, getTasksByPriority } from '../controllers/tasks-controllers.js';
+import { createTask, getTaskById, getTasks } from '../controllers/tasks-controllers.js';
 
 
 export const tasksRoute = express.Router();
@@ -8,7 +8,7 @@ export const tasksRoute = express.Router();
 
 tasksRoute.get('/tasks/:taskId', getTaskById);
 
-tasksRoute.get('/tasks', getTasksByPriority);
+tasksRoute.get('/tasks', getTasks);
 
 tasksRoute.post('/tasks', createTask);
 

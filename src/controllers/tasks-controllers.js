@@ -78,13 +78,31 @@ export const getTaskById = (req, res, next) => {
 	res.json({ targetTask });
 }
 
-export const getTasksByPriority = (req, res, next) => {
+export const getTasks = (req, res, next) => {
+	let result = [...DUMMY_TASKS];
+	
 	const { sort } = req.query;
 
 	if (sort === 'priority') {
-		const sortedTasks = mergeSort(DUMMY_TASKS);
-		return res.json({ tasks: sortedTasks });
+		result = mergeSort(DUMMY_TASKS);
 	}
 
-	res.json({ tasks: DUMMY_TASKS});
+
+	if (req.query.filter && req.query.value !== undefined) {
+		const filterKey = req.query.filter;
+		const filterValue = req.query.value;
+		
+		result = result.filter((el) => {
+			if (typeof el[filterKey] === 'boolean') {
+				return el[filterKey] === (filterValue === 'true');
+			}
+			return el[filterKey].toString().toLowerCase() === filterValue;
+		})
+	}
+
+	res.json({ tasks: result});
+}
+
+export const getTasksByCompletionStatus = (req, res, next) => {
+	
 }
