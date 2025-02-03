@@ -11,11 +11,10 @@ let DUMMY_TASKS = [
 		isCritical: true,
 		isCompleted: false,
 	},
-    {
+	{
 		id: '678911',
 		title: 'Buy pants',
-		description:
-			'Buy new pair of pants.',
+		description: 'Buy new pair of pants.',
 		priority: 'medium',
 		dueDate: '2025-02-12',
 		isCritical: false,
@@ -24,8 +23,7 @@ let DUMMY_TASKS = [
 	{
 		id: '17181921',
 		title: 'Book plane tickets',
-		description:
-			'Book plane tickets for April trip.',
+		description: 'Book plane tickets for April trip.',
 		priority: 'high',
 		dueDate: '2025-02-04',
 		isCritical: true,
@@ -34,13 +32,12 @@ let DUMMY_TASKS = [
 	{
 		id: '100129',
 		title: 'Get new coffee machine',
-		description:
-			'You need to replace your old coffee machine.',
+		description: 'You need to replace your old coffee machine.',
 		priority: 'low',
 		dueDate: '2025-02-26',
 		isCritical: false,
 		isCompleted: false,
-	}
+	},
 ];
 
 export const createTask = (req, res, next) => {
@@ -57,9 +54,9 @@ export const createTask = (req, res, next) => {
 		isCompleted: false,
 	};
 
-    DUMMY_TASKS.push(createdTask);
+	DUMMY_TASKS.push(createdTask);
 
-    res.status(201).json({task: createdTask});
+	res.status(201).json({ task: createdTask });
 };
 
 export const getTaskById = (req, res, next) => {
@@ -67,42 +64,82 @@ export const getTaskById = (req, res, next) => {
 
 	const targetTask = DUMMY_TASKS.find((task) => {
 		return task.id === targetId;
-	})
+	});
 
 	if (!targetTask) {
-		const error = new Error('Could not find task with provided ID.')
+		const error = new Error('Could not find task with provided ID.');
 		error.code = 404;
 		return next(error);
 	}
 
 	res.json({ targetTask });
-}
+};
 
 export const getTasks = (req, res, next) => {
 	let result = [...DUMMY_TASKS];
-	
+
 	const { sort } = req.query;
 
 	if (sort === 'priority') {
 		result = mergeSort(DUMMY_TASKS);
 	}
 
-
 	if (req.query.filter && req.query.value !== undefined) {
 		const filterKey = req.query.filter;
 		const filterValue = req.query.value;
-		
-		result = result.filter((el) => {
-			if (typeof el[filterKey] === 'boolean') {
-				return el[filterKey] === (filterValue === 'true');
+
+		result = result.filter((task) => {
+			if (typeof task[filterKey] === 'boolean') {
+				return task[filterKey] === (filterValue === 'true');
 			}
-			return el[filterKey].toString().toLowerCase() === filterValue;
-		})
+			return task[filterKey].toString().toLowerCase() === filterValue;
+		});
 	}
 
-	res.json({ tasks: result});
-}
+	res.json({ tasks: result });
+};
 
-export const getTasksByCompletionStatus = (req, res, next) => {
-	
-}
+export const updateTask = (req, res, next) => {
+	const targetId = req.params.taskId;
+	const { title, description, dueDate, isCompleted, isCritical } = req.body;
+
+	const targetIndex = DUMMY_TASKS.findIndex((task) => task.id === targetId);
+	const updatedTask ={...DUMMY_TASKS[targetIndex]};
+
+	if (!updatedTask) {
+		const error = new Error('Could not find task with provided ID.');
+		error.code = 404;
+		return next(error);
+	}
+
+	if (title) {
+		updatedTask.title = title;
+	}
+
+	if (description) {
+		updatedTask.description = description;
+	}
+
+	if (dueDate) {
+		updatedTask.dueDate = dueDate;
+	}
+
+	if (isCompleted) {
+		updatedTask.isCompleted = isCompleted;
+	}
+
+	if (isCritical) {
+		updatedTask.isCritical = isCritical;
+	}
+
+	if (isCritical && dueDate) {
+		const newPriority = calculatePriority(isCritical, dueDate);
+		updatedTask.priority = newPriority;
+	}
+
+	DUMMY_TASKS[targetIndex] = updatedTask;
+
+	res.status(200).json({ task: updatedTask });
+
+};
+
