@@ -143,3 +143,18 @@ export const updateTask = (req, res, next) => {
 
 };
 
+export const deleteTask = (req, res, next) => {
+	const targetId = req.params.taskId;
+
+	const targetIndex = DUMMY_TASKS.find((task) => task.id === targetId);
+
+	if (targetIndex === -1) {
+		const error = new Error('Could not find task with provided ID.');
+		error.code = 404;
+		return next(error);
+	}
+
+	DUMMY_TASKS = DUMMY_TASKS.filter((task) => task.id != targetId);
+
+	res.status(200).json({ message: "Task deleted" });
+}
