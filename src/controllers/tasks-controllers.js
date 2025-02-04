@@ -41,6 +41,7 @@ let DUMMY_TASKS = [
 	},
 ];
 
+
 export const createTask = async (req, res, next) => {
 	const { title, description, dueDate, isCritical } = req.body;
 
@@ -64,6 +65,7 @@ export const createTask = async (req, res, next) => {
 	res.status(201).json({ task: createdTask });
 };
 
+
 export const getTaskById = async (req, res, next) => {
 	const targetId = req.params.taskId;
 	let targetTask;
@@ -84,6 +86,7 @@ export const getTaskById = async (req, res, next) => {
 
 	res.json({ task: targetTask.toObject({ getters: true }) });
 };
+
 
 export const getTasks = async (req, res, next) => {
     try {
@@ -111,73 +114,47 @@ export const getTasks = async (req, res, next) => {
     }
 };
 
+
 export const updateTask = async (req, res, next) => {
-	const targetId = req.params.taskId;
-	const { title, description, dueDate, isCompleted, isCritical } = req.body;
+    const targetId = req.params.taskId;
+    const { title, description, dueDate, isCompleted, isCritical } = req.body;
 
-	let task;
-	try {
-		task = await Task.findById(targetId);
-	} catch (err) {
-		const error = new Error('Something went wrong. Could not update task.');
-		error.code = 500;
-		return next(error);
-	}
+    try {
+        let priority = undefined;
+        if (isCritical !== undefined && dueDate) {
+            priority = calculatePriority(isCritical, dueDate);
+        }
 
-	if (!task) {
-		const error = new Error('Could not find task with provided ID.');
-		error.code = 404;
-		return next(error);
-	}
+        const updatedTask = await Task.findByIdAndUpdate(
+            targetId,
+            { title, description, dueDate, isCompleted, isCritical, ...(priority && { priority }) }, 
+            { new: true, runValidators: true }
+        );
 
-	if (title) {
-		task.title = title;
-	}
+        if (!updatedTask) {
+            return res.status(404).json({ message: 'Could not find task with provided ID.' });
+        }
 
-	if (description) {
-		task.description = description;
-	}
-
-	if (dueDate) {
-		task.dueDate = dueDate;
-	}
-
-	if (isCompleted) {
-		task.isCompleted = isCompleted;
-	}
-
-	if (isCritical) {
-		task.isCritical = isCritical;
-	}
-
-	if (isCritical && dueDate) {
-		const newPriority = calculatePriority(isCritical, dueDate);
-		task.priority = newPriority;
-	}
-
-	try {
-		await task.save();
-	} catch (err) {
-		const error = new Error('Something went wrong. Could not update task.');
-		error.code = 500;
-		return next(error);
-	}
-
-	res.status(200).json({ task: task.toObject({ getters: true }) });
+        res.status(200).json({ task: updatedTask.toObject({ getters: true }) });
+    } catch (err) {
+        next(new Error('Something went wrong. Could not update task.'));
+    }
 };
 
-export const deleteTask = (req, res, next) => {
+
+export const deleteTask = async (req, res, next) => {
 	const targetId = req.params.taskId;
 
-	const targetIndex = DUMMY_TASKS.find((task) => task.id === targetId);
-
-	if (targetIndex === -1) {
-		const error = new Error('Could not find task with provided ID.');
-		error.code = 404;
+	try {
+		await Task.findByIdAndDelete(targetId);
+	} catch (err) {
+		const error = new Error('Something went wrong. Could not delete task.');
+		error.code = 500;
 		return next(error);
 	}
 
-	DUMMY_TASKS = DUMMY_TASKS.filter((task) => task.id != targetId);
 
 	res.status(200).json({ message: 'Task deleted' });
 };
+
+
