@@ -64,8 +64,8 @@ export const getTasks = async (req, res, next) => {
 
         let tasks = await Task.find(query);
 
-        if (req.query.sort === 'priority') {
-            tasks = mergeSort(tasks);
+        if (req.query.sort === 'priority' || req.query.sort === "dueDate") {
+            tasks = mergeSort(tasks, req.query.sort);
         }
 
         res.json({ tasks });
