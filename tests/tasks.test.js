@@ -67,8 +67,6 @@ describe('🔹 Task API CRUD Operations', () => {
 
 		const response = await request(app).get(`/tasks/${newTask.id}`);
 
-		console.log(response.body);
-
 		expect(response.status).toBe(200);
 		expect(response.body.task.title).toBe('Find Task'); 
 	});
@@ -111,4 +109,91 @@ describe('🔹 Task API CRUD Operations', () => {
 		const checkTask = await Task.findById(newTask.id);
 		expect(checkTask).toBeNull();
 	});
+});
+
+describe('🔹 Task API Sorting and Filtering', () => {
+    beforeEach(async () => {
+        await Task.deleteMany();
+
+        await Task.insertMany([
+            {
+                title: 'Task A',
+                description: 'First task',
+                dueDate: '2025-02-20',
+                isCompleted: false,
+                priority: 'high',
+            },
+            {
+                title: 'Task B',
+                description: 'Second task',
+                dueDate: '2025-02-10',
+                isCompleted: true,
+                priority: 'medium',
+            },
+            {
+                title: 'Task C',
+                description: 'Third task',
+                dueDate: '2025-02-15',
+                isCompleted: false,
+                priority: 'low',
+            },
+            {
+                title: 'Task D',
+                description: 'Fourth task',
+                dueDate: null, 
+                isCompleted: false,
+                priority: 'high',
+            },
+        ]);
+    });
+
+    test('Sort tasks by dueDate', async () => {
+        const response = await request(app).get('/tasks?sort=dueDate');
+        expect(response.status).toBe(200);
+        
+        const taskIds = response.body.tasks.map(t => t.title);
+        expect(taskIds).toEqual(['Task B', 'Task C', 'Task A', 'Task D']); 
+    });
+
+    test('Sort tasks by priority', async () => {
+        const response = await request(app).get('/tasks?sort=priority');
+        expect(response.status).toBe(200);
+
+        const taskIds = response.body.tasks.map(t => t.title);
+        expect(taskIds).toEqual(['Task A', 'Task D', 'Task C', 'Task B']); 
+    });
+
+    test('Filter tasks by completion status (isCompleted=false)', async () => {
+        const response = await request(app).get('/tasks?filter=isCompleted&value=false');
+        expect(response.status).toBe(200);
+        expect(response.body.tasks.length).toBe(3); 
+
+        const taskIds = response.body.tasks.map(t => t.title);
+        expect(taskIds).toEqual(['Task A', 'Task C', 'Task D']);
+    });
+
+    test('Filter tasks by priority (priority=high)', async () => {
+        const response = await request(app).get('/tasks?filter=priority&value=high');
+        expect(response.status).toBe(200);
+        expect(response.body.tasks.length).toBe(2);
+
+        const taskIds = response.body.tasks.map(t => t.title);
+        expect(taskIds).toEqual(['Task A', 'Task D']);
+    });
+
+    test('Filter tasks by completion status and sort by dueDate', async () => {
+        const response = await request(app).get('/tasks?filter=isCompleted&value=false&sort=dueDate');
+        expect(response.status).toBe(200);
+        
+        const taskIds = response.body.tasks.map(t => t.title);
+        expect(taskIds).toEqual(['Task C', 'Task A', 'Task D']); 
+    });
+
+    test('Filter tasks by priority and sort by dueDate', async () => {
+        const response = await request(app).get('/tasks?filter=priority&value=high&sort=dueDate');
+        expect(response.status).toBe(200);
+        
+        const taskIds = response.body.tasks.map(t => t.title);
+        expect(taskIds).toEqual(['Task A', 'Task D']);
+    });
 });
