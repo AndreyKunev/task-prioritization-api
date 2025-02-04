@@ -51,7 +51,7 @@ export const createTask = async (req, res, next) => {
 		description,
 		priority,
 		dueDate,
-		isCompleted: false
+		isCompleted: false,
 	});
 	try {
 		await createdTask.save();
@@ -64,20 +64,25 @@ export const createTask = async (req, res, next) => {
 	res.status(201).json({ task: createdTask });
 };
 
-export const getTaskById = (req, res, next) => {
+export const getTaskById = async (req, res, next) => {
 	const targetId = req.params.taskId;
+	let targetTask;
 
-	const targetTask = DUMMY_TASKS.find((task) => {
-		return task.id === targetId;
-	});
+	try {
+		targetTask = await Task.findById(targetId);
+	} catch (err) {
+		const error = new Error('Something went wrong, could not find task.');
+		error.code = 500;
+		return next(error);
+	}
 
 	if (!targetTask) {
-		const error = new Error('Could not find task with provided ID.');
+		const error = new Error('Could not find task for provided ID.');
 		error.code = 404;
 		return next(error);
 	}
 
-	res.json({ targetTask });
+	res.json({ task: targetTask.toObject({ getters: true }) });
 };
 
 export const getTasks = (req, res, next) => {
@@ -109,7 +114,7 @@ export const updateTask = (req, res, next) => {
 	const { title, description, dueDate, isCompleted, isCritical } = req.body;
 
 	const targetIndex = DUMMY_TASKS.findIndex((task) => task.id === targetId);
-	const updatedTask ={...DUMMY_TASKS[targetIndex]};
+	const updatedTask = { ...DUMMY_TASKS[targetIndex] };
 
 	if (!updatedTask) {
 		const error = new Error('Could not find task with provided ID.');
@@ -145,7 +150,6 @@ export const updateTask = (req, res, next) => {
 	DUMMY_TASKS[targetIndex] = updatedTask;
 
 	res.status(200).json({ task: updatedTask });
-
 };
 
 export const deleteTask = (req, res, next) => {
@@ -161,5 +165,5 @@ export const deleteTask = (req, res, next) => {
 
 	DUMMY_TASKS = DUMMY_TASKS.filter((task) => task.id != targetId);
 
-	res.status(200).json({ message: "Task deleted" });
-}
+	res.status(200).json({ message: 'Task deleted' });
+};
