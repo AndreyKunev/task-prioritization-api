@@ -1,4 +1,5 @@
 import { calculatePriority, mergeSort } from '../utils/taskUtils.js';
+import { Task } from '../models/task.js';
 
 let DUMMY_TASKS = [
 	{
@@ -40,21 +41,25 @@ let DUMMY_TASKS = [
 	},
 ];
 
-export const createTask = (req, res, next) => {
+export const createTask = async (req, res, next) => {
 	const { title, description, dueDate, isCritical } = req.body;
 
 	const priority = calculatePriority(isCritical, dueDate);
 
-	const createdTask = {
-		id: crypto.randomUUID(),
+	const createdTask = new Task({
 		title,
 		description,
 		priority,
 		dueDate,
-		isCompleted: false,
-	};
-
-	DUMMY_TASKS.push(createdTask);
+		isCompleted: false
+	});
+	try {
+		await createdTask.save();
+	} catch (err) {
+		const error = new Error('Creating task failed. Please try again.');
+		error.code = 500;
+		return next(error);
+	}
 
 	res.status(201).json({ task: createdTask });
 };
