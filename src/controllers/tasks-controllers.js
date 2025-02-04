@@ -85,71 +85,85 @@ export const getTaskById = async (req, res, next) => {
 	res.json({ task: targetTask.toObject({ getters: true }) });
 };
 
-export const getTasks = (req, res, next) => {
-	let result = [...DUMMY_TASKS];
+export const getTasks = async (req, res, next) => {
+    try {
+        let query = {};
 
-	const { sort } = req.query;
+        if (req.query.filter && req.query.value !== undefined) {
+            const filterKey = req.query.filter;
+            let filterValue = req.query.value;
 
-	if (sort === 'priority') {
-		result = mergeSort(DUMMY_TASKS);
-	}
+            if (filterValue === 'true') filterValue = true;
+            if (filterValue === 'false') filterValue = false;
 
-	if (req.query.filter && req.query.value !== undefined) {
-		const filterKey = req.query.filter;
-		const filterValue = req.query.value;
+            query[filterKey] = filterValue;
+        }
 
-		result = result.filter((task) => {
-			if (typeof task[filterKey] === 'boolean') {
-				return task[filterKey] === (filterValue === 'true');
-			}
-			return task[filterKey].toString().toLowerCase() === filterValue;
-		});
-	}
+        let tasks = await Task.find(query);
 
-	res.json({ tasks: result });
+        if (req.query.sort === 'priority') {
+            tasks = mergeSort(tasks);
+        }
+
+        res.json({ tasks });
+    } catch (error) {
+        next(error); 
+    }
 };
 
-export const updateTask = (req, res, next) => {
+export const updateTask = async (req, res, next) => {
 	const targetId = req.params.taskId;
 	const { title, description, dueDate, isCompleted, isCritical } = req.body;
 
-	const targetIndex = DUMMY_TASKS.findIndex((task) => task.id === targetId);
-	const updatedTask = { ...DUMMY_TASKS[targetIndex] };
+	let task;
+	try {
+		task = await Task.findById(targetId);
+	} catch (err) {
+		const error = new Error('Something went wrong. Could not update task.');
+		error.code = 500;
+		return next(error);
+	}
 
-	if (!updatedTask) {
+	if (!task) {
 		const error = new Error('Could not find task with provided ID.');
 		error.code = 404;
 		return next(error);
 	}
 
 	if (title) {
-		updatedTask.title = title;
+		task.title = title;
 	}
 
 	if (description) {
-		updatedTask.description = description;
+		task.description = description;
 	}
 
 	if (dueDate) {
-		updatedTask.dueDate = dueDate;
+		task.dueDate = dueDate;
 	}
 
 	if (isCompleted) {
-		updatedTask.isCompleted = isCompleted;
+		task.isCompleted = isCompleted;
 	}
 
 	if (isCritical) {
-		updatedTask.isCritical = isCritical;
+		task.isCritical = isCritical;
 	}
 
 	if (isCritical && dueDate) {
 		const newPriority = calculatePriority(isCritical, dueDate);
-		updatedTask.priority = newPriority;
+		task.priority = newPriority;
 	}
 
-	DUMMY_TASKS[targetIndex] = updatedTask;
+	try {
+		await task.save();
+	} catch (err) {
+		const error = new Error('Something went wrong. Could not update task.');
+		error.code = 500;
+		return next(error);
+	}
 
-	res.status(200).json({ task: updatedTask });
+	res.status(200).json({ task: task.toObject({ getters: true }) });
 };
 
 export const deleteTask = (req, res, next) => {
