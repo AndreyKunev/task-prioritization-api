@@ -20,13 +20,27 @@ export const calculatePriority = (isCritical, dueDate) => {
 };
 
 const compareTasks = (a, b, sortBy) => {
+	const isMissingDateA = a.dueDate === undefined || a.dueDate === null;
+	const isMissingDateB = b.dueDate === undefined || b.dueDate === null;
+	const dateA = isMissingDateA ? null : new Date(a.dueDate);
+	const dateB = isMissingDateB ? null : new Date(b.dueDate);
+	let comparisonReturn;
+
+	if (isMissingDateA && !isMissingDateB) {
+		comparisonReturn = 1;
+	} else if (!isMissingDateA && isMissingDateB) {
+		comparisonReturn = -1;
+	} else if (!isMissingDateA && !isMissingDateB) {
+		comparisonReturn = dateA - dateB;
+	}
+
 	if (sortBy === 'priority') {
 		const priorityA =
-			a.isCompleted || a.priority == undefined || a.priority == null
+			a.isCompleted || a.priority === undefined || a.priority === null
 				? 'completed'
 				: a.priority;
 		const priorityB =
-			b.isCompleted || b.priority == undefined || b.priority == null
+			b.isCompleted || b.priority === undefined || b.priority === null
 				? 'completed'
 				: b.priority;
 
@@ -34,11 +48,11 @@ const compareTasks = (a, b, sortBy) => {
 			return priorityOrder[priorityA] - priorityOrder[priorityB];
 		}
 
-		return new Date(a.dueDate) - new Date(b.dueDate);
+		return comparisonReturn;
 	}
 
 	if (sortBy === 'dueDate') {
-		return new Date(a.dueDate) - new Date(b.dueDate);
+		return comparisonReturn;
 	}
 
 	return 0;
