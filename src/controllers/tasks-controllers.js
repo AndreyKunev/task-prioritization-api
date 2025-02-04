@@ -1,46 +1,6 @@
 import { calculatePriority, mergeSort } from '../utils/taskUtils.js';
 import { Task } from '../models/task.js';
 
-let DUMMY_TASKS = [
-	{
-		id: '12345',
-		title: 'Fix login bug',
-		description:
-			'Resolve the issue preventing users from logging in with Google OAuth.',
-		priority: 'high',
-		dueDate: '2025-02-03',
-		isCritical: true,
-		isCompleted: false,
-	},
-	{
-		id: '678911',
-		title: 'Buy pants',
-		description: 'Buy new pair of pants.',
-		priority: 'medium',
-		dueDate: '2025-02-12',
-		isCritical: false,
-		isCompleted: false,
-	},
-	{
-		id: '17181921',
-		title: 'Book plane tickets',
-		description: 'Book plane tickets for April trip.',
-		priority: 'high',
-		dueDate: '2025-02-04',
-		isCritical: true,
-		isCompleted: false,
-	},
-	{
-		id: '100129',
-		title: 'Get new coffee machine',
-		description: 'You need to replace your old coffee machine.',
-		priority: 'low',
-		dueDate: '2025-02-26',
-		isCritical: false,
-		isCompleted: false,
-	},
-];
-
 
 export const createTask = async (req, res, next) => {
 	const { title, description, dueDate, isCritical } = req.body;
