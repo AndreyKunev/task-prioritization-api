@@ -1,3 +1,5 @@
+import mongoose from 'mongoose';
+
 import { calculatePriority, mergeSort } from '../utils/taskUtils.js';
 import { Task } from '../models/task.js';
 import { HttpError } from '../models/http-error.js';
@@ -27,13 +29,18 @@ export const createTask = async (req, res, next) => {
 
 export const getTaskById = async (req, res, next) => {
 	const targetId = req.params.taskId;
+
+	if (!mongoose.Types.ObjectId.isValid(targetId)) {
+		return next(new HttpError('Invalid task ID format.', 400));
+	}
+
 	let targetTask;
 
 	try {
 		targetTask = await Task.findById(targetId);
 	} catch (err) {
 		return next(
-			new HttpError('Creating task failed. Please try again.', 500)
+			new HttpError('Failed to get task.', 500)
 		);
 	}
 
@@ -65,13 +72,18 @@ export const getTasks = async (req, res, next) => {
 		}
 
 		return res.json({ tasks });
-	} catch (error) {
-		return next(error);
+	} catch (err) {
+		return next(new HttpError('Something went wrong. Could not retrieve tasks.', 500));
 	}
 };
 
 export const updateTask = async (req, res, next) => {
 	const targetId = req.params.taskId;
+
+	if (!mongoose.Types.ObjectId.isValid(targetId)) {
+		return next(new HttpError('Invalid task ID format.', 400));
+	}
+
 	const { title, description, dueDate, isCompleted, isCritical } = req.body;
 
 	try {
@@ -111,6 +123,10 @@ export const updateTask = async (req, res, next) => {
 
 export const deleteTask = async (req, res, next) => {
 	const targetId = req.params.taskId;
+
+	if (!mongoose.Types.ObjectId.isValid(targetId)) {
+		return next(new HttpError('Invalid task ID format.', 400));
+	}
 
 	try {
 		await Task.findByIdAndDelete(targetId);
