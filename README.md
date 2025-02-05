@@ -10,6 +10,7 @@ Task Prioritization API is a backend application built with Node.js and Express 
 - **Sorting:** Implements merge sort to sort tasks by priority or due date.
 - **Testing:** Uses `jest` and `supertest` for tests.
 - **In-memory Database for Testing:** Uses `mongodb-memory-server` for efficient testing.
+- **Openai for sentiment analysis:** Uses openai's API to add sentiment analysis to task descriptions.
 
 ## Setup Instructions
 
@@ -85,6 +86,7 @@ DELETE /tasks/:taskId
 - **Advanced Filtering & Pagination:** Enhance task retrieval with filters and pagination.
 - **Task Dependencies:** Allow tasks to depend on each other for better workflow management.
 - **Notifications:** Send reminders for upcoming due dates.
+- **Find more uses for sentiment analysis:** Brainstorm more uses for sentiment, could be used for filtering.
 
 ## External Libraries & Tools Used
 
@@ -96,6 +98,7 @@ DELETE /tasks/:taskId
 - supertest - API testing
 - mongodb-memory-server - In-memory MongoDB for testing
 - nodemon - Auto-reloading during development
+- openai - Used for sentiment analysis
 
 ---
 
