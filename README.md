@@ -82,9 +82,9 @@ DELETE /tasks/:taskId
 ```
 
 ## Future Improvements
-- **User Authentication:** Implement authentication to support multiple users.
-- **Advanced Filtering & Pagination:** Enhance task retrieval with filters and pagination.
-- **Task Dependencies:** Allow tasks to depend on each other for better workflow management.
+- **User authentication:** Implement authentication to support multiple users.
+- **Advanced filtering & pagination:** Enhance task retrieval with filters and pagination.
+- **Task dependencies:** Allow tasks to depend on each other for better workflow management.
 - **Notifications:** Send reminders for upcoming due dates.
 - **Find more uses for sentiment analysis:** Brainstorm more uses for sentiment, could be used for filtering.
 
