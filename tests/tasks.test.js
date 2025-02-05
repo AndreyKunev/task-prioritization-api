@@ -5,110 +5,123 @@ import { MongoMemoryServer } from 'mongodb-memory-server';
 import app from '../src/app.js';
 import { Task } from '../src/models/task.js';
 
+jest.mock('../src/utils/sentimentAnalysis.js', () => ({
+    analyzeSentiment: jest.fn(() => 0.75),
+}));
+
 let mongoServer;
 
 beforeAll(async () => {
-	mongoServer = await MongoMemoryServer.create();
-	const mongoUri = mongoServer.getUri();
-	await mongoose.connect(mongoUri);
+    mongoServer = await MongoMemoryServer.create();
+    const mongoUri = mongoServer.getUri();
+    await mongoose.connect(mongoUri);
 });
 
 afterAll(async () => {
-	await mongoose.disconnect();
-	await mongoServer.stop();
+    await mongoose.disconnect();
+    await mongoServer.stop();
 });
 
 beforeEach(async () => {
-	await Task.deleteMany();
+    await Task.deleteMany();
 });
 
 describe('🔹 Task API CRUD Operations', () => {
-	let taskId;
+    let taskId;
 
-	test('Create a new task', async () => {
-		const response = await request(app).post('/tasks').send({
-			title: 'Test Task',
-			description: 'Test Description',
-			dueDate: '2025-02-10',
-			isCompleted: false,
-			isCritical: false,
-			priority: 'medium',
-		});
+    test('Create a new task', async () => {
+        const response = await request(app).post('/tasks').send({
+            title: 'Test Task',
+            description: 'Test Description',
+            dueDate: '2025-02-10',
+            isCompleted: false,
+            isCritical: false,
+            priority: 'medium',
+            sentiment: 0.75,
+        });
 
-		expect(response.status).toBe(201);
-		expect(response.body.task).toHaveProperty('id');
-		expect(response.body.task.title).toBe('Test Task');
-		taskId = response.body.task.id;
-	});
+        expect(response.status).toBe(201);
+        expect(response.body.task).toHaveProperty('id');
+        expect(response.body.task.title).toBe('Test Task');
+        expect(response.body.task.sentiment).toBe("0.75"); 
+        taskId = response.body.task.id;
+    });
 
-	test('Retrieve all tasks', async () => {
-		await Task.create({
-			title: 'Sample Task',
-			description: 'Sample Description',
-			dueDate: '2025-02-10',
-			isCompleted: false,
-			isCritical: false,
-			priority: 'medium',
-		});
+    test('Retrieve all tasks', async () => {
+        await Task.create({
+            title: 'Sample Task',
+            description: 'Sample Description',
+            dueDate: '2025-02-10',
+            isCompleted: false,
+            isCritical: false,
+            priority: 'medium',
+            sentiment: 0.75,
+        });
 
-		const response = await request(app).get('/tasks');
-		expect(response.status).toBe(200);
-		expect(response.body.tasks.length).toBeGreaterThan(0);
-	});
+        const response = await request(app).get('/tasks');
+        expect(response.status).toBe(200);
+        expect(response.body.tasks.length).toBeGreaterThan(0);
+    });
 
-	test('Retrieve a task by ID', async () => {
-		const newTask = await Task.create({
-			title: 'Find Task',
-			description: 'Find this task',
-			dueDate: '2025-02-15',
-			isCompleted: false,
-			priority: 'medium', 
-		});
+    test('Retrieve a task by ID', async () => {
+        const newTask = await Task.create({
+            title: 'Find Task',
+            description: 'Find this task',
+            dueDate: '2025-02-15',
+            isCompleted: false,
+            priority: 'medium',
+            sentiment: 0.75,
+        });
 
-		const response = await request(app).get(`/tasks/${newTask.id}`);
+        const response = await request(app).get(`/tasks/${newTask.id}`);
 
-		expect(response.status).toBe(200);
-		expect(response.body.task.title).toBe('Find Task'); 
-	});
+        expect(response.status).toBe(200);
+        expect(response.body.task.title).toBe('Find Task');
+        expect(response.body.task.sentiment).toBe("0.75");
+    });
 
-	test('Update a task', async () => {
-		const newTask = await Task.create({
-			title: 'Update Me',
-			description: 'Will be updated',
-			dueDate: '2025-02-20',
-			isCompleted: false,
-			isCritical: false,
-			priority: 'medium',
-		});
+    test('Update a task', async () => {
+        const newTask = await Task.create({
+            title: 'Update Me',
+            description: 'Will be updated',
+            dueDate: '2025-02-20',
+            isCompleted: false,
+            isCritical: false,
+            priority: 'medium',
+            sentiment: 0.75,
+        });
 
-		const response = await request(app).put(`/tasks/${newTask.id}`).send({
-			title: 'Updated Task',
-			isCompleted: true,
-			priority: 'high',
-		});
+        const response = await request(app).put(`/tasks/${newTask.id}`).send({
+            title: 'Updated Task',
+            isCompleted: true,
+            priority: 'high',
+            sentiment: 0.75,
+        });
 
-		expect(response.status).toBe(200);
-		expect(response.body.task.title).toBe('Updated Task');
-		expect(response.body.task.isCompleted).toBe(true);
-	});
+        expect(response.status).toBe(200);
+        expect(response.body.task.title).toBe('Updated Task');
+        expect(response.body.task.isCompleted).toBe(true);
+        expect(response.body.task.sentiment).toBe("0.75");
+    });
 
-	test('Delete a task', async () => {
-		const newTask = await Task.create({
-			title: 'Delete Me',
-			description: 'Will be deleted',
-			dueDate: '2025-02-20',
-			isCompleted: false,
-			isCritical: false,
-			priority: 'medium',
-		});
+    test('Delete a task', async () => {
+        const newTask = await Task.create({
+            title: 'Delete Me',
+            description: 'Will be deleted',
+            dueDate: '2025-02-20',
+            isCompleted: false,
+            isCritical: false,
+            priority: 'medium',
+            sentiment: 0.75,
+        });
 
-		const response = await request(app).delete(`/tasks/${newTask.id}`);
-		expect(response.status).toBe(200);
-		expect(response.body.message).toBe('Task deleted');
+        const response = await request(app).delete(`/tasks/${newTask.id}`);
+        expect(response.status).toBe(200);
+        expect(response.body.message).toBe('Task deleted');
 
-		const checkTask = await Task.findById(newTask.id);
-		expect(checkTask).toBeNull();
-	});
+        const checkTask = await Task.findById(newTask.id);
+        expect(checkTask).toBeNull();
+    });
 });
 
 describe('🔹 Task API Sorting and Filtering', () => {
@@ -122,6 +135,7 @@ describe('🔹 Task API Sorting and Filtering', () => {
                 dueDate: '2025-02-20',
                 isCompleted: false,
                 priority: 'high',
+                sentiment: 0.75,
             },
             {
                 title: 'Task B',
@@ -129,6 +143,7 @@ describe('🔹 Task API Sorting and Filtering', () => {
                 dueDate: '2025-02-10',
                 isCompleted: true,
                 priority: 'medium',
+                sentiment: 0.75,
             },
             {
                 title: 'Task C',
@@ -136,13 +151,15 @@ describe('🔹 Task API Sorting and Filtering', () => {
                 dueDate: '2025-02-15',
                 isCompleted: false,
                 priority: 'low',
+                sentiment: 0.75,
             },
             {
                 title: 'Task D',
                 description: 'Fourth task',
-                dueDate: null, 
+                dueDate: null,
                 isCompleted: false,
                 priority: 'high',
+                sentiment: 0.75,
             },
         ]);
     });
@@ -150,9 +167,9 @@ describe('🔹 Task API Sorting and Filtering', () => {
     test('Sort tasks by dueDate', async () => {
         const response = await request(app).get('/tasks?sort=dueDate');
         expect(response.status).toBe(200);
-        
+
         const taskIds = response.body.tasks.map(t => t.title);
-        expect(taskIds).toEqual(['Task B', 'Task C', 'Task A', 'Task D']); 
+        expect(taskIds).toEqual(['Task B', 'Task C', 'Task A', 'Task D']);
     });
 
     test('Sort tasks by priority', async () => {
@@ -160,13 +177,13 @@ describe('🔹 Task API Sorting and Filtering', () => {
         expect(response.status).toBe(200);
 
         const taskIds = response.body.tasks.map(t => t.title);
-        expect(taskIds).toEqual(['Task A', 'Task D', 'Task C', 'Task B']); 
+        expect(taskIds).toEqual(['Task A', 'Task D', 'Task C', 'Task B']);
     });
 
     test('Filter tasks by completion status (isCompleted=false)', async () => {
         const response = await request(app).get('/tasks?filter=isCompleted&value=false');
         expect(response.status).toBe(200);
-        expect(response.body.tasks.length).toBe(3); 
+        expect(response.body.tasks.length).toBe(3);
 
         const taskIds = response.body.tasks.map(t => t.title);
         expect(taskIds).toEqual(['Task A', 'Task C', 'Task D']);
@@ -184,15 +201,15 @@ describe('🔹 Task API Sorting and Filtering', () => {
     test('Filter tasks by completion status and sort by dueDate', async () => {
         const response = await request(app).get('/tasks?filter=isCompleted&value=false&sort=dueDate');
         expect(response.status).toBe(200);
-        
+
         const taskIds = response.body.tasks.map(t => t.title);
-        expect(taskIds).toEqual(['Task C', 'Task A', 'Task D']); 
+        expect(taskIds).toEqual(['Task C', 'Task A', 'Task D']);
     });
 
     test('Filter tasks by priority and sort by dueDate', async () => {
         const response = await request(app).get('/tasks?filter=priority&value=high&sort=dueDate');
         expect(response.status).toBe(200);
-        
+
         const taskIds = response.body.tasks.map(t => t.title);
         expect(taskIds).toEqual(['Task A', 'Task D']);
     });
