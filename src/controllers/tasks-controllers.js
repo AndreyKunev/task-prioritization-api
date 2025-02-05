@@ -1,6 +1,6 @@
 import { calculatePriority, mergeSort } from '../utils/taskUtils.js';
 import { Task } from '../models/task.js';
-
+import { HttpError } from '../models/http-error.js';
 
 export const createTask = async (req, res, next) => {
 	const { title, description, dueDate, isCritical } = req.body;
@@ -17,14 +17,13 @@ export const createTask = async (req, res, next) => {
 	try {
 		await createdTask.save();
 	} catch (err) {
-		const error = new Error('Creating task failed. Please try again.');
-		error.code = 500;
-		return next(error);
+		return next(
+			new HttpError('Creating task failed. Please try again.', 500)
+		);
 	}
 
-	res.status(201).json({ task: createdTask });
+	return res.status(201).json({ task: createdTask });
 };
-
 
 export const getTaskById = async (req, res, next) => {
 	const targetId = req.params.taskId;
@@ -33,74 +32,82 @@ export const getTaskById = async (req, res, next) => {
 	try {
 		targetTask = await Task.findById(targetId);
 	} catch (err) {
-		const error = new Error('Something went wrong, could not find task.');
-		error.code = 500;
-		return next(error);
+		return next(
+			new HttpError('Creating task failed. Please try again.', 500)
+		);
 	}
 
 	if (!targetTask) {
-		const error = new Error('Could not find task for provided ID.');
-		error.code = 404;
-		return next(error);
+		return next(new HttpError('Could not find task for provided ID.', 404));
 	}
 
-	res.json({ task: targetTask.toObject({ getters: true }) });
+	return res.json({ task: targetTask.toObject({ getters: true }) });
 };
-
 
 export const getTasks = async (req, res, next) => {
-    try {
-        let query = {};
+	try {
+		let query = {};
 
-        if (req.query.filter && req.query.value !== undefined) {
-            const filterKey = req.query.filter;
-            let filterValue = req.query.value;
+		if (req.query.filter && req.query.value !== undefined) {
+			const filterKey = req.query.filter;
+			let filterValue = req.query.value;
 
-            if (filterValue === 'true') filterValue = true;
-            if (filterValue === 'false') filterValue = false;
+			if (filterValue === 'true') filterValue = true;
+			if (filterValue === 'false') filterValue = false;
 
-            query[filterKey] = filterValue;
-        }
+			query[filterKey] = filterValue;
+		}
 
-        let tasks = await Task.find(query);
+		let tasks = await Task.find(query);
 
-        if (req.query.sort === 'priority' || req.query.sort === "dueDate") {
-            tasks = mergeSort(tasks, req.query.sort);
-        }
+		if (req.query.sort === 'priority' || req.query.sort === 'dueDate') {
+			tasks = mergeSort(tasks, req.query.sort);
+		}
 
-        res.json({ tasks });
-    } catch (error) {
-        next(error); 
-    }
+		return res.json({ tasks });
+	} catch (error) {
+		return next(error);
+	}
 };
-
 
 export const updateTask = async (req, res, next) => {
-    const targetId = req.params.taskId;
-    const { title, description, dueDate, isCompleted, isCritical } = req.body;
+	const targetId = req.params.taskId;
+	const { title, description, dueDate, isCompleted, isCritical } = req.body;
 
-    try {
-        let priority = undefined;
-        if (isCritical !== undefined && dueDate) {
-            priority = calculatePriority(isCritical, dueDate);
-        }
+	try {
+		let priority = undefined;
+		if (isCritical !== undefined && dueDate) {
+			priority = calculatePriority(isCritical, dueDate);
+		}
 
-        const updatedTask = await Task.findByIdAndUpdate(
-            targetId,
-            { title, description, dueDate, isCompleted, isCritical, ...(priority && { priority }) }, 
-            { new: true, runValidators: true }
-        );
+		const updatedTask = await Task.findByIdAndUpdate(
+			targetId,
+			{
+				title,
+				description,
+				dueDate,
+				isCompleted,
+				isCritical,
+				...(priority && { priority }),
+			},
+			{ new: true, runValidators: true }
+		);
 
-        if (!updatedTask) {
-            return res.status(404).json({ message: 'Could not find task with provided ID.' });
-        }
+		if (!updatedTask) {
+			return next(
+				new HttpError('Could not find task with provided ID.', 404)
+			);
+		}
 
-        res.status(200).json({ task: updatedTask.toObject({ getters: true }) });
-    } catch (err) {
-        next(new Error('Something went wrong. Could not update task.'));
-    }
+		return res
+			.status(200)
+			.json({ task: updatedTask.toObject({ getters: true }) });
+	} catch (err) {
+		return next(
+			new HttpError('Something went wrong. Could not update task.', 500)
+		);
+	}
 };
-
 
 export const deleteTask = async (req, res, next) => {
 	const targetId = req.params.taskId;
@@ -108,13 +115,10 @@ export const deleteTask = async (req, res, next) => {
 	try {
 		await Task.findByIdAndDelete(targetId);
 	} catch (err) {
-		const error = new Error('Something went wrong. Could not delete task.');
-		error.code = 500;
-		return next(error);
+		return next(
+			new HttpError('Something went wrong. Could not delete task.', 500)
+		);
 	}
 
-
-	res.status(200).json({ message: 'Task deleted' });
+	return res.status(200).json({ message: 'Task deleted' });
 };
-
-
