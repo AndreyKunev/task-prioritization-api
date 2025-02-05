@@ -1,4 +1,4 @@
-import { body } from 'express-validator';
+import { body, validationResult } from 'express-validator';
 
 const createTaskValidations = [
 	body('title').notEmpty().withMessage('Title is required'),
