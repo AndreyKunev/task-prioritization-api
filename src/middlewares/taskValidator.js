@@ -3,7 +3,6 @@ import { body, validationResult } from 'express-validator';
 const createTaskValidations = [
 	body('title').notEmpty().withMessage('Title is required'),
 	body('description')
-		.optional()
 		.isLength({ min: 3 })
 		.withMessage('Description must be at least 3 characters long'),
 	body('dueDate')

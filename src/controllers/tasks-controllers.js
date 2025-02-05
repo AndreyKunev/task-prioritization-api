@@ -1,6 +1,7 @@
 import mongoose from 'mongoose';
 
 import { calculatePriority, mergeSort } from '../utils/taskUtils.js';
+import { analyzeSentiment } from '../utils/sentimentAnalysis.js';
 import { Task } from '../models/task.js';
 import { HttpError } from '../models/http-error.js';
 
@@ -8,6 +9,7 @@ export const createTask = async (req, res, next) => {
 	const { title, description, dueDate, isCritical } = req.body;
 
 	const priority = calculatePriority(isCritical, dueDate);
+	const sentiment = await analyzeSentiment(description);
 
 	const createdTask = new Task({
 		title,
@@ -15,6 +17,7 @@ export const createTask = async (req, res, next) => {
 		priority,
 		dueDate,
 		isCompleted: false,
+		sentiment
 	});
 	try {
 		await createdTask.save();
@@ -88,8 +91,13 @@ export const updateTask = async (req, res, next) => {
 
 	try {
 		let priority = undefined;
-		if (isCritical !== undefined && dueDate) {
+		if (isCritical !== undefined || dueDate) {
 			priority = calculatePriority(isCritical, dueDate);
+		}
+		
+		let sentiment; 
+		if (description) {
+			sentiment = await analyzeSentiment(description);
 		}
 
 		const updatedTask = await Task.findByIdAndUpdate(
@@ -99,7 +107,7 @@ export const updateTask = async (req, res, next) => {
 				description,
 				dueDate,
 				isCompleted,
-				isCritical,
+				...(sentiment && { sentiment }),
 				...(priority && { priority }),
 			},
 			{ new: true, runValidators: true }

@@ -4,10 +4,11 @@ const Schema = mongoose.Schema;
 
 const taskSchema = new Schema({
 	title: { type: String, required: true },
-	description: String,
+	description: { type: String, required: true },
 	priority: { type: String, required: true },
 	dueDate: Date,
 	isCompleted: { type: Boolean, required: true },
+	sentiment: { type: String, required: true }
 });
 
 taskSchema.virtual('id').get(function () {
