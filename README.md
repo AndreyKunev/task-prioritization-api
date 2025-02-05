@@ -88,15 +88,14 @@ DELETE /tasks/:taskId
 
 ## External Libraries & Tools Used
 
-**Libraries and their purpose**
-Express - Backend framework 
-Mongoose - MongoDB ORM 
-express-validator - Input validation
-dotenv - Environment variable management
-jest - Testing framework
-supertest - API testing
-mongodb-memory-server - In-memory MongoDB for testing
-nodemon - Auto-reloading during development
+- Express - Backend framework 
+- Mongoose - MongoDB ORM 
+- express-validator - Input validation
+- dotenv - Environment variable management
+- jest - Testing framework
+- supertest - API testing
+- mongodb-memory-server - In-memory MongoDB for testing
+- nodemon - Auto-reloading during development
 
 ---
 
